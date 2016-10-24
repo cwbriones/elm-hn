@@ -4,37 +4,56 @@ import Html.Attributes exposing (..)
 
 import String
 import Regex
-import Task
-import Debug exposing (log)
+import Task exposing (Task)
 import Time exposing (Time, second)
 
 import Cache exposing (getPostsOrFetch)
-import Api exposing (Post)
+import Api exposing (Id, Post)
 
 type alias Model =
-  { posts : List Post
+  { posts : List (Resource Id Post)
   , time : Time
   }
+
+type Resource id a =
+  NotLoaded id | Loaded a
 
 type Msg =
   Tick Time
   | FetchFail
-  | FetchSucceed (List Post)
+  | FetchPost Post
+  | FetchIds (List Id)
 
 init =
   let
-    topPosts = (Api.top 0 30) `Task.andThen` getPostsOrFetch
-    fetchTop = Task.perform (always FetchFail) FetchSucceed topPosts
+    topPosts = (Api.top 0 30)
+    fetchTop = Task.perform (always FetchFail) FetchIds topPosts
   in
     ({ posts = [], time = 0 }, fetchTop)
 
-noCmd a = (a, Cmd.none)
-
 update msg model =
-  case msg of
-    Tick time -> noCmd { model | time = time }
-    FetchFail -> noCmd model
-    FetchSucceed posts -> noCmd { model | posts = posts }
+  let
+    noCmd a = (a, Cmd.none)
+    fetchPost id = Api.item id |> Task.perform (always FetchFail) FetchPost
+    fetchPosts ids = List.map fetchPost ids |> List.reverse |> Cmd.batch
+  in
+    case msg of
+      Tick time -> noCmd { model | time = time }
+      FetchFail -> noCmd model
+      FetchPost post -> noCmd { model | posts = insertPost post model.posts }
+      FetchIds ids ->
+        ({ model | posts = List.map NotLoaded ids }, fetchPosts ids)
+
+insertPost newPost posts =
+  let
+    replaceById post =
+      case post of
+        NotLoaded i ->
+          if i == newPost.id then Loaded newPost
+                           else NotLoaded i
+        loaded -> loaded
+  in
+    List.map replaceById posts
 
 main =
   App.program
@@ -47,9 +66,21 @@ main =
 view model =
   div [class "container"] [viewPosts model.time model.posts]
 
-viewPosts : Time -> List Api.Post -> Html Msg
+viewPosts : Time -> List (Resource Id Api.Post) -> Html Msg
 viewPosts time posts =
-  ul [class "post-list"] (List.indexedMap (viewPost time) posts)
+  let
+    viewResource index res =
+      case res of
+        NotLoaded _ -> placeholder index
+        Loaded p -> viewPost time index p
+  in
+    ul [class "post-list"] (List.indexedMap viewResource posts)
+
+placeholder index =
+  let
+    indexString = toString (index + 1) ++ ". "
+  in
+    li [class "post loading"] [ text (indexString ++ " Loading ...") ]
 
 viewPost : Time -> Int -> Api.Post -> Html Msg
 viewPost time index post =

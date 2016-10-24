@@ -7,6 +7,7 @@ module Api
     , show
     , job
     , item
+    , Id
     , Post
     , decodePost
     , encodePost

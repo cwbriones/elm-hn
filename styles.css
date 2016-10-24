@@ -7,6 +7,10 @@
   padding: 10px;
 }
 
+.loading {
+  height: 50px;
+}
+
 .post {
   font-size: 12pt;
   font-family: sans-serif;
