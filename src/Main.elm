@@ -9,7 +9,7 @@ import Time exposing (Time, second)
 main : Program Never
 main =
   App.program
-    { subscriptions = \_ -> Sub.none
+    { subscriptions = subscriptions
     , init = initialize Model.init
     , update = update
     , view = view

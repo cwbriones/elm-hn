@@ -8,15 +8,33 @@ import Html.Events exposing (onClick)
 import String
 import Time exposing (Time)
 
-import Model exposing (Model, Post, Id, Resource(..))
+import Model exposing (Model, Post, Id, Resource(..), Section(..))
 import Update exposing (Msg(..))
 
 view : Model -> Html Msg
 view model =
   div [class "container"]
-    [ viewPosts model
-    , a [ href "#top", onClick (Page (model.page + 1)) ] [ text "More" ]
+    [ viewHeader
+    , viewPosts model
     ]
+
+viewHeader : Html Msg
+viewHeader =
+  let
+    sectionLink txt sec = a [ href ("#" ++ txt), onClick (Section sec) ] [ text txt ]
+  in
+    header []
+      [ a [ href "#", onClick (Section Top), id "site-title" ] [ text "Hacker News" ]
+      , span [ id "nav" ]
+        [ sectionLink "new" New
+        , text " | "
+        , sectionLink "show" Show
+        , text " | "
+        , sectionLink "ask" Ask
+        , text " | "
+        , sectionLink "jobs" Jobs
+        ]
+      ]
 
 viewPosts : Model -> Html Msg
 viewPosts model =
@@ -25,8 +43,9 @@ viewPosts model =
       case res of
         NotLoaded _ -> placeholder (model.offset + index)
         Loaded p -> viewPost model.time (model.offset + index) p
+    moreLink = a [ href "#top", onClick (Page (model.page + 1)) ] [ text "More" ]
   in
-    ul [class "post-list"] (List.indexedMap viewResource model.posts)
+    ul [class "post-list"] ((List.indexedMap viewResource model.posts) ++ [moreLink])
 
 placeholder : Int -> Html Msg
 placeholder index =

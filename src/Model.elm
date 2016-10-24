@@ -4,6 +4,7 @@ module Model
     , Id
     , Post
     , Resource(..)
+    , Section(..)
     , encodePost
     , postDecoder
     , init
@@ -29,15 +30,23 @@ type alias Post =
 type Resource id a =
   NotLoaded id | Loaded a
 
+type Section =
+  Top
+  | New
+  | Show
+  | Ask
+  | Jobs
+
 type alias Model =
   { posts : List (Resource Id Post)
   , time : Time
   , page : Int
-  , offset: Int
+  , offset : Int
+  , section : Section
   }
 
 init : Model
-init = { page = 0, posts = [], time = 0, offset = 0 }
+init = { page = 0, posts = [], time = 0, offset = 0, section = Top }
 
 -- Serialization
 
