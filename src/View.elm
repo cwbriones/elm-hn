@@ -8,7 +8,7 @@ import Html.Events exposing (onClick)
 import String
 import Time exposing (Time)
 
-import Model exposing (Model, Post, Id, Resource(..), Section(..))
+import Model exposing (Model, Post, Id, Resource(..), Section(..), Content(..))
 import Update exposing (Msg(..))
 
 view : Model -> Html Msg
@@ -68,17 +68,27 @@ viewPost time index post =
       >> strip "https://"
       >> strip "www."
       >> (takeUntil '/')
+
+    viewUrl url title =
+      [ a [ href url ] [ text title ]
+      , span [ class "url" ]
+          [ text "("
+          , a [ href url ] [ text (showUrl url) ]
+          , text ")"
+          ]
+       ]
+
+    -- TODO: This should link to the item
+    viewContent post =
+      case post.content of
+        Just (Url url) -> viewUrl url post.title
+        _ -> [ a [ ] [ text post.title ] ]
+
   in
     li [class "post"]
-      [ text indexString
-      , a [ href post.url ] [ text post.title ]
-      , span [ class "url" ]
-        [ text "("
-        , a [ href post.url ] [ text (showUrl post.url) ]
-        , text ")"
-        ]
-      , p [ class "info" ] [ text info ]
-      ]
+      ([ text indexString ]
+      ++ (viewContent post) ++
+      [ p [ class "info" ] [ text info ] ])
 
 showTime : Float -> String
 showTime secF =

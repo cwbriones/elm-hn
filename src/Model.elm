@@ -5,6 +5,7 @@ module Model
     , Post
     , Resource(..)
     , Section(..)
+    , Content(..)
     , encodePost
     , postDecoder
     , init
@@ -24,8 +25,11 @@ type alias Post =
   , score : Int
   , time : Time
   , title : String
-  , url : String
+  , content : Maybe Content
   }
+
+type Content =
+  Url String | Text String
 
 type Resource id a =
   NotLoaded id | Loaded a
@@ -67,7 +71,14 @@ postDecoder =
       `apply` ("score" := Decode.int)
       `apply` ("time" := Decode.float)
       `apply` ("title" := Decode.string)
-      `apply` ("url" := Decode.string)
+      `apply` contentDecoder
+
+contentDecoder =
+  let
+    urlDecoder = Decode.map Url ("url" := Decode.string)
+    textDecoder = Decode.map Text ("text" := Decode.string)
+  in
+    Decode.maybe <| Decode.oneOf [urlDecoder, textDecoder]
 
 decodeWithDefault default decoder =
   Decode.maybe decoder |> Decode.map (Maybe.withDefault default)
@@ -82,5 +93,11 @@ encodePost post =
     , ("score", Encode.int post.score)
     , ("time", Encode.float post.time)
     , ("title", Encode.string post.title)
-    , ("url", Encode.string post.url)
+    , ("content", encodeContent post.content)
     ]
+
+encodeContent content =
+  case content of
+    Just (Url string) -> Encode.string string
+    Just (Text string) -> Encode.string string
+    Nothing -> Encode.null
