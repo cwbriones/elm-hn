@@ -5,73 +5,63 @@ module Update
     , Msg(..)
     )
 
-import Task exposing (Task)
 import Time exposing (Time)
 
-import Api
-import Model exposing (Model, Post, Id, Resource(..), Section(..))
+import Model exposing (Model)
+-- import Post exposing (Post, Id, Resource(..))
+import Feed.Model exposing (Feed, Section(..))
+import Feed.Update
+
+import Navigation
+import Nav exposing (DesiredPage(..))
+
+-- import Debug exposing (log)
 
 type Msg =
   Tick Time
-  | Page Int
-  | FetchFail
-  | FetchPost Post
-  | FetchIds (List Id)
-  | Section Section
+  | GoTo DesiredPage
+  | FeedMsg Feed.Update.Msg
+  | Page DesiredPage
+
+type alias Delegator msg model =
+  { tagger : msg -> Msg
+  , get : Model -> model
+  , set : model -> Model -> Model
+  , update : (msg -> model -> (model, Cmd msg))
+  }
 
 initialize : Model -> (Model, Cmd Msg)
-initialize model = fetchPage model
+initialize model =
+    feedInitialize Top model
+
+feedInitialize section model =
+  case Feed.Update.initialize section of
+    (feed, feedMsg) -> ({model|nav = feed}, Cmd.map FeedMsg feedMsg)
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   let
-    noCmd a = (a, Cmd.none)
-    fetchPost id = Api.item id |> Task.perform (always FetchFail) FetchPost
-    fetchPosts ids = List.map fetchPost ids |> List.reverse |> Cmd.batch
+    setNav nav model = {model|nav = nav}
   in
     case msg of
-      Tick time -> noCmd { model | time = time }
-      Page page -> fetchPage {model | page = page}
-      FetchFail -> noCmd model
-      FetchPost post -> noCmd { model | posts = insertPost post model.posts }
-      FetchIds ids ->
-        ({ model | posts = List.map NotLoaded ids }, fetchPosts ids)
-      Section section -> fetchPage {model | page = 0, section = section}
+      GoTo page -> {model|nav=page} ! []
+      Tick time -> {model | time = time} ! []
+      FeedMsg submsg -> delegate feedDelegator submsg model
+      Page desiredPage ->
+        case desiredPage of
+          Feed section -> feedInitialize section model
 
-fetchPage : Model -> (Model, Cmd Msg)
-fetchPage model =
-  let
-    pageSize = 30
+-- Fanout Message Types
 
-    apiCall section =
-      case section of
-        New -> Api.new
-        Ask -> Api.ask
-        Jobs -> Api.job
-        Show -> Api.show
-        Top -> Api.top
+delegate : Delegator msg model -> msg -> Model -> (Model, Cmd Msg)
+delegate d msg model =
+  case d.update msg (d.get model) of
+    (new, newMsg) -> (d.set new model, Cmd.map d.tagger newMsg)
 
-    sectionPosts = (apiCall model.section) model.page pageSize
-    emptyPage = List.map NotLoaded (List.repeat pageSize 0)
-
-    fetchSection = Task.perform (always FetchFail) FetchIds sectionPosts
-    getTime = Task.perform (always FetchFail) Tick Time.now
-
-    newModel =
-      { model | posts = emptyPage, time = 0, offset = model.page * pageSize }
-  in
-    (newModel, Cmd.batch [fetchSection, getTime])
-
-
-insertPost : Post -> List (Resource Id Post) -> List (Resource Id Post)
-insertPost newPost posts =
-  let
-    replaceById post =
-      case post of
-        NotLoaded i ->
-          if i == newPost.id then Loaded newPost
-                           else NotLoaded i
-        loaded -> loaded
-  in
-    List.map replaceById posts
-
+feedDelegator : Delegator Feed.Update.Msg Feed
+feedDelegator =
+  { tagger = FeedMsg
+  , get = .nav
+  , set = \f model -> {model|nav = f}
+  , update = Feed.Update.update
+  }

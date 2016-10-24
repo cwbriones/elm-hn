@@ -14,7 +14,7 @@ import Json.Decode as Decode
 import Task exposing (Task)
 import Time exposing (Time)
 
-import Model exposing (Post, Id, encodePost, postDecoder)
+import Post exposing (Post, Id, encodePost, postDecoder)
 
 baseUrl = "https://hacker-news.firebaseio.com/v0/"
 

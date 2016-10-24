@@ -4,46 +4,59 @@ module View
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Html.Events exposing (onClick)
+import Html.Events exposing (onWithOptions)
 import String
 import Time exposing (Time)
+import Json.Decode as Json
 
-import Model exposing (Model, Post, Id, Resource(..), Section(..), Content(..))
+import Model exposing (Model)
+import Post exposing (Post, Id, Resource(..), Content(..))
+import Feed.Model exposing (Feed, Section(..))
+
 import Update exposing (Msg(..))
+import Nav exposing (DesiredPage, pageToUrl)
 
 view : Model -> Html Msg
 view model =
   div [class "container"]
     [ viewHeader
-    , viewPosts model
+    , viewPosts model.time model.nav
     ]
 
 viewHeader : Html Msg
 viewHeader =
   let
-    sectionLink txt sec = a [ href ("#" ++ txt), onClick (Section sec) ] [ text txt ]
+    sectionLink txt = a (clickTo ("/" ++ txt)) [ text txt ]
   in
     header []
-      [ a [ href "#", onClick (Section Top), id "site-title" ] [ text "Hacker News" ]
+      [ a ((clickTo "/top") ++ [id "site-title" ]) [ text "Hacker News" ]
       , span [ id "nav" ]
-        [ sectionLink "new" New
+        [ sectionLink "new"
         , text " | "
-        , sectionLink "show" Show
+        , sectionLink "show"
         , text " | "
-        , sectionLink "ask" Ask
+        , sectionLink "ask"
         , text " | "
-        , sectionLink "jobs" Jobs
+        , sectionLink "jobs"
         ]
       ]
 
-viewPosts : Model -> Html Msg
-viewPosts model =
+clickTo page =
+  [ href (pageToUrl page)
+  , onWithOptions
+    "click"
+      { stopPropagation = True, preventDefault = True }
+      (Json.map (\_ -> GoTo page) Json.value)
+  ]
+
+viewPosts : Time -> Feed -> Html Msg
+viewPosts time model =
   let
     viewResource res =
       case res of
         NotLoaded _ -> placeholder
-        Loaded p -> viewPost model.time p
-    moreLink = a [ id "more",  href "#top", onClick (Page (model.page + 1)) ] [ text "More" ]
+        Loaded p -> viewPost time p
+    moreLink = a [ id "more" ] [ text "More" ]
   in
     ol [class "post-list", start (model.offset + 1)]
       ((List.map viewResource model.posts) ++ [moreLink])
