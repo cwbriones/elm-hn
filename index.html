@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en" data-framework="elm">
+  <head>
+    <title>elm • hackernews</title>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <!-- We don't actually need anything in the body -->
+    <div id="elm-app"></div>
+  </body>
+
+  <!-- Import our compiled Elm code -->
+  <script src="elm.js"></script>
+
+  <!-- Run our Elm app! -->
+  <script>
+    let mount = document.getElementById("elm-app");
+    Elm.Main.embed(mount);
+  </script>
+</html>

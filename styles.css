@@ -1,0 +1,76 @@
+.container {
+  width: 92%;
+  max-width: 720px;
+  position: relative;
+  margin: 0 auto;
+  background-color: #f6f6ef;
+  padding: 10px;
+}
+
+.post {
+  font-size: 12pt;
+  font-family: sans-serif;
+}
+
+.post-list {
+	list-style-type: none;
+}
+
+a {
+  text-decoration: none;
+}
+
+.post > a {
+  color: #000000;
+  text-decoration: none;
+}
+
+.post a:visited {
+  color: #828282;
+}
+
+.post a:hover {
+  cursor: pointer;
+}
+
+.post .info {
+  font-size: 8pt;
+  color: #828282;
+  position: relative;
+}
+
+.url {
+  font-size: 8pt;
+  color: #828282;
+  padding: 5px;
+}
+
+.url a {
+  color: #828282;
+}
+
+.url a:hover {
+  text-decoration: underline;
+}
+
+/* .item { */
+/*   display: -webkit-flex; */
+/*   display: flex; */
+/*   /* border: 1px solid black; */ */
+/*   width: 100% */
+/* } */
+
+/* .score { */
+/*   width: 50px; */
+/* } */
+
+/* .title > span { */
+/*   color: red; */
+/* } */
+
+.votearrow {
+  background: url(https://news.ycombinator.com/grayarrow.gif) 0 0;
+  background-repeat: no-repeat;
+  width: 20px;
+  height: 100%;
+}
