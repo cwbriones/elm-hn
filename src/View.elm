@@ -39,25 +39,22 @@ viewHeader =
 viewPosts : Model -> Html Msg
 viewPosts model =
   let
-    viewResource index res =
+    viewResource res =
       case res of
-        NotLoaded _ -> placeholder (model.offset + index)
-        Loaded p -> viewPost model.time (model.offset + index) p
-    moreLink = a [ href "#top", onClick (Page (model.page + 1)) ] [ text "More" ]
+        NotLoaded _ -> placeholder
+        Loaded p -> viewPost model.time p
+    moreLink = a [ id "more",  href "#top", onClick (Page (model.page + 1)) ] [ text "More" ]
   in
-    ul [class "post-list"] ((List.indexedMap viewResource model.posts) ++ [moreLink])
+    ol [class "post-list", start (model.offset + 1)]
+      ((List.map viewResource model.posts) ++ [moreLink])
 
-placeholder : Int -> Html Msg
-placeholder index =
-  let
-    indexString = toString (index + 1) ++ ". "
-  in
-    li [class "post loading"] [ text (indexString ++ " Loading ...") ]
+placeholder : Html Msg
+placeholder =
+  li [class "post loading"] [ text "Loading ..." ]
 
-viewPost : Time -> Int -> Post -> Html Msg
-viewPost time index post =
+viewPost : Time -> Post -> Html Msg
+viewPost time post =
   let
-    indexString = toString (index + 1) ++ ". "
     by = (toString post.score) ++ " points by " ++ post.by
     comments = (toString <| List.length post.kids) ++ " comments"
     timeAgo = showTime (Time.inSeconds time - post.time)
@@ -83,12 +80,11 @@ viewPost time index post =
       case post.content of
         Just (Url url) -> viewUrl url post.title
         _ -> [ a [ ] [ text post.title ] ]
-
   in
     li [class "post"]
-      ([ text indexString ]
-      ++ (viewContent post) ++
-      [ p [ class "info" ] [ text info ] ])
+      [ div [class "post-title"] (viewContent post)
+      , div [ class "post-meta" ] [ text info ]
+      ]
 
 showTime : Float -> String
 showTime secF =
