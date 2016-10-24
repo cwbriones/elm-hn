@@ -9,7 +9,6 @@ import Task exposing (Task)
 import Time exposing (Time, second)
 import Debug exposing (log)
 
-import Cache exposing (getPostsOrFetch)
 import Api exposing (Id, Post)
 
 type alias Model =
