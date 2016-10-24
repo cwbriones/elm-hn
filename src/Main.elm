@@ -1,11 +1,13 @@
 import Html.App as App
 import Html exposing (..)
 import Html.Attributes exposing (..)
+import Html.Events exposing (onClick)
 
 import String
 import Regex
 import Task exposing (Task)
 import Time exposing (Time, second)
+import Debug exposing (log)
 
 import Cache exposing (getPostsOrFetch)
 import Api exposing (Id, Post)
@@ -13,6 +15,8 @@ import Api exposing (Id, Post)
 type alias Model =
   { posts : List (Resource Id Post)
   , time : Time
+  , page : Int
+  , offset: Int
   }
 
 type Resource id a =
@@ -20,20 +24,28 @@ type Resource id a =
 
 type Msg =
   Tick Time
+  | Page Int
   | FetchFail
   | FetchPost Post
   | FetchIds (List Id)
 
-init =
+initModel = { page = 0, posts = [], time = 0, offset = 0 }
+
+init = fetchPage initModel 0
+
+fetchPage model page =
   let
     pageSize = 30
-    topPosts = (Api.top 0 pageSize)
+    topPosts = Api.top page pageSize
     emptyPage = List.map NotLoaded (List.repeat pageSize 0)
 
     fetchTop = Task.perform (always FetchFail) FetchIds topPosts
     getTime = Task.perform (always FetchFail) Tick Time.now
+
+    newModel =
+      { model | posts = emptyPage, time = 0, page = page, offset = page * pageSize }
   in
-    ({ posts = emptyPage, time = 0 }, Cmd.batch [fetchTop, getTime])
+    (newModel, Cmd.batch [fetchTop, getTime])
 
 update msg model =
   let
@@ -43,10 +55,11 @@ update msg model =
   in
     case msg of
       Tick time -> noCmd { model | time = time }
+      Page page -> fetchPage model page
       FetchFail -> noCmd model
       FetchPost post -> noCmd { model | posts = insertPost post model.posts }
       FetchIds ids ->
-        ({ model | posts = List.map NotLoaded ids }, fetchPosts ids)
+        ({ model | posts = List.map NotLoaded ids }, fetchPosts (log "got ids " ids))
 
 insertPost newPost posts =
   let
@@ -68,17 +81,20 @@ main =
     }
 
 view model =
-  div [class "container"] [viewPosts model.time model.posts]
+  div [class "container"]
+    [ viewPosts model
+    , a [ href "#top", onClick (Page (model.page + 1)) ] [ text "More" ]
+    ]
 
-viewPosts : Time -> List (Resource Id Api.Post) -> Html Msg
-viewPosts time posts =
+viewPosts : Model -> Html Msg
+viewPosts model =
   let
     viewResource index res =
       case res of
-        NotLoaded _ -> placeholder index
-        Loaded p -> viewPost time index p
+        NotLoaded _ -> placeholder (model.offset + index)
+        Loaded p -> viewPost model.time (model.offset + index) p
   in
-    ul [class "post-list"] (List.indexedMap viewResource posts)
+    ul [class "post-list"] (List.indexedMap viewResource model.posts)
 
 placeholder index =
   let

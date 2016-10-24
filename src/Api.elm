@@ -57,7 +57,7 @@ fetchSection section n limit =
   let
     url = baseUrl ++ section
     request = Http.get (Decode.list Decode.int) url
-    page = List.take limit >> List.drop (n * limit)
+    page = List.drop (n * limit) >> List.take limit
   in
     Task.map page request
 
