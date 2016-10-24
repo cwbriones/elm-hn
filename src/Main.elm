@@ -26,10 +26,14 @@ type Msg =
 
 init =
   let
-    topPosts = (Api.top 0 30)
+    pageSize = 30
+    topPosts = (Api.top 0 pageSize)
+    emptyPage = List.map NotLoaded (List.repeat pageSize 0)
+
     fetchTop = Task.perform (always FetchFail) FetchIds topPosts
+    getTime = Task.perform (always FetchFail) Tick Time.now
   in
-    ({ posts = [], time = 0 }, fetchTop)
+    ({ posts = emptyPage, time = 0 }, Cmd.batch [fetchTop, getTime])
 
 update msg model =
   let
