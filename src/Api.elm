@@ -12,10 +12,10 @@ module Api
 import Http
 import Json.Decode as Decode
 import Task exposing (Task)
-import Time exposing (Time)
 
-import Model exposing (Post, Id, encodePost, postDecoder)
+import Feed.Model exposing (Post, Id, postDecoder)
 
+baseUrl : String
 baseUrl = "https://hacker-news.firebaseio.com/v0/"
 
 top : Int -> Int -> Task Http.Error (List Int)

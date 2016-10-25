@@ -1,19 +1,16 @@
-import Html.App as App
+import Navigation
 
-import Model
-import Update exposing (update, initialize, Msg(Tick))
+import Routing exposing (urlParser)
+import Model exposing (init)
 import View exposing (view)
-
-import Time exposing (Time, second)
+import Update exposing (update, urlUpdate, subscriptions)
 
 main : Program Never
 main =
-  App.program
-    { subscriptions = subscriptions
-    , init = initialize Model.init
+  Navigation.program Routing.urlParser
+    { init = init
     , update = update
     , view = view
+    , subscriptions = subscriptions
+    , urlUpdate = urlUpdate
     }
-
-subscriptions : a -> Sub Msg
-subscriptions _ = Time.every second Tick
