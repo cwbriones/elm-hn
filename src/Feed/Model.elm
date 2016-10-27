@@ -6,9 +6,10 @@ module Feed.Model
     , sectionToString
     , init
     , Post
+    , PostType(..)
+    , PostMeta
     , Id
     , Resource(..)
-    , Content(..)
     , postDecoder
     )
 
@@ -53,9 +54,6 @@ init = { page = 0, posts = [], offset = 0, section = Top }
 
 -- Posts
 
-type Content =
-  Url String | Text String
-
 type alias Id = Int
 
 type alias Post =
@@ -63,10 +61,23 @@ type alias Post =
   , descendants : Int
   , id: Id
   , kids: List Id
-  , score : Int
+  , postType : PostType
   , time : Time
-  , title : String
-  , content : Maybe Content
+  , meta : Maybe PostMeta
+  , text : String
+  }
+
+type PostType
+  = Comment
+  | Story
+  -- | Ask
+  -- | Job
+  -- | Poll
+
+type alias PostMeta =
+  { title : String
+  , url : String
+  , score : Int
   }
 
 type Resource id a = NotLoaded id | Loaded a
@@ -79,25 +90,51 @@ postDecoder =
     succeed = Decode.succeed
     apply = Decode.object2 (<|)
     decodeIntList = Decode.list Decode.int
-    decodeKids = decodeWithDefault [] ("kids" := decodeIntList)
-    decodeDesc = decodeWithDefault 0 ("descendants" := Decode.int)
-
-    contentDecoder =
-      let
-        urlDecoder = Decode.map Url ("url" := Decode.string)
-        textDecoder = Decode.map Text ("text" := Decode.string)
-      in
-        Decode.maybe <| Decode.oneOf [urlDecoder, textDecoder]
-
-    decodeWithDefault default decoder =
-      Decode.maybe decoder |> Decode.map (Maybe.withDefault default)
   in
     succeed Post
       `apply` ("by" := Decode.string)
-      `apply` decodeDesc
+      `apply` decodeWithDefault 0 ("descendants" := Decode.int)
       `apply` ("id" := Decode.int)
-      `apply` decodeKids
-      `apply` ("score" := Decode.int)
+      `apply` decodeWithDefault [] ("kids" := decodeIntList)
+      `apply` postTypeDecoder
       `apply` ("time" := Decode.float)
+      `apply` (Decode.maybe postMetaDecoder)
+      `apply` decodeWithDefault "" ("text" := Decode.string)
+
+postTypeDecoder : Decoder PostType
+postTypeDecoder =
+  ("type" := Decode.string) `Decode.andThen` postTypeInfo
+
+postTypeInfo : String -> Decoder PostType
+postTypeInfo tag =
+  let
+    apply = Decode.object2 (<|)
+    succeed = Decode.succeed
+  in
+    case tag of
+      "comment" ->
+        succeed Comment
+      "story" ->
+        succeed Story
+      -- "job" ->
+      --   succeed Job
+      -- "poll" ->
+      --   succeed Poll
+      -- "ask" ->
+      --   succeed Ask
+      _ ->
+        Decode.fail (tag ++ " is not a recognized post type")
+
+postMetaDecoder : Decoder PostMeta
+postMetaDecoder =
+  let
+    apply = Decode.object2 (<|)
+  in
+    (Decode.succeed PostMeta)
       `apply` ("title" := Decode.string)
-      `apply` contentDecoder
+      `apply` (decodeWithDefault "" ("url" := Decode.string))
+      `apply` ("score" := Decode.int)
+
+decodeWithDefault : a -> Decoder a -> Decoder a
+decodeWithDefault default decoder =
+  Decode.maybe decoder |> Decode.map (Maybe.withDefault default)

@@ -8,7 +8,7 @@ import Html.Events exposing (onClick)
 import String
 import Time exposing (Time)
 
-import Feed.Model exposing (Feed, Section(..), Post, Id, Resource(..), Content(..))
+import Feed.Model exposing (Feed, Section(..), Post, Id, Resource(..))
 import Feed.Update exposing (Msg(..))
 
 view : Time -> Feed -> Html Msg
@@ -30,7 +30,7 @@ placeholder =
 viewPost : Time -> Post -> Html Msg
 viewPost time post =
   let
-    by = (toString post.score) ++ " points by " ++ post.by
+    by = ("X") ++ " points by " ++ post.by
     comments = (toString <| List.length post.kids) ++ " comments"
     timeAgo = showTime (Time.inSeconds time - post.time)
     info = String.join " | " [ by, timeAgo, comments ]
@@ -51,13 +51,13 @@ viewPost time post =
        ]
 
     -- TODO: This should link to the item
-    viewContent post =
-      case post.content of
-        Just (Url url) -> viewUrl url post.title
-        _ -> [ a [ ] [ text post.title ] ]
+    -- viewContent post =
+    --   case post.content of
+    --     Just (Url url) -> viewUrl url post.title
+    --     _ -> [ a [ ] [ text post.title ] ]
   in
     li [class "post"]
-      [ div [class "post-title"] (viewContent post)
+      [ div [class "post-title"] [text "This is the post title"]
       , div [ class "post-meta" ] [ text info ]
       ]
 

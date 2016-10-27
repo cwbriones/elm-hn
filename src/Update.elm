@@ -49,6 +49,8 @@ update msg model =
         (newFeedModel, feedCmd) = FeedUpdate.update msg model.feedModel
       in
         {model|feedModel = newFeedModel} ! [Cmd.map FeedMsg feedCmd]
+    CommentsMsg msg ->
+      model ! []
 
 urlUpdate : (Route, Address) -> Model -> (Model, Cmd Msg)
 urlUpdate (route, address) model =
