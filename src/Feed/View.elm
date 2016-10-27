@@ -4,15 +4,12 @@ module Feed.View
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Html.Events exposing (onWithOptions)
+import Html.Events exposing (onClick)
 import String
 import Time exposing (Time)
-import Json.Decode as Json
 
 import Feed.Model exposing (Feed, Section(..), Post, Id, Resource(..), Content(..))
-
-import Update exposing (Msg(..))
-import Nav exposing (DesiredPage, pageToUrl)
+import Feed.Update exposing (Msg(..))
 
 view : Time -> Feed -> Html Msg
 view time model =
@@ -21,7 +18,7 @@ view time model =
       case res of
         NotLoaded _ -> placeholder
         Loaded p -> viewPost time p
-    moreLink = a [ id "more" ] [ text "More" ]
+    moreLink = a [ id "more", onClick <| Paginate (model.page + 1) ] [ text "More" ]
   in
     ol [class "post-list", start (model.offset + 1)]
       ((List.map viewResource model.posts) ++ [moreLink])

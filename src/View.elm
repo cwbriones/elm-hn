@@ -3,13 +3,14 @@ module View exposing (view)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
+import Html.App as App
 import String
 
 import Model exposing (Model)
 import Messages exposing (Msg(..))
 import Feed.Model exposing (Section(..))
-
--- View
+import Feed.View as FeedView
+import Routing exposing (Route(..))
 
 view : Model -> Html Msg
 view model =
@@ -38,9 +39,9 @@ viewHeader =
 
 viewPage : Model -> Html Msg
 viewPage model =
---   case model.route of
---     FeedRoute _ ->
---       viewFeed model.feedModel
---     _ ->
+  case model.route of
+    FeedRoute _ ->
+      App.map FeedMsg (FeedView.view model.time model.feedModel)
+    _ ->
   text (String.join "/" model.address.path)
 

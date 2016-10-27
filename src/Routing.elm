@@ -53,6 +53,8 @@ sectionParser =
         "" -> Ok Top
         "jobs" -> Ok Jobs
         "new" -> Ok New
+        "ask" -> Ok Ask
+        "show" -> Ok Show
         _ -> Err string
   in
     UrlParser.custom "SECTION" checkTag

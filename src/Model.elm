@@ -18,11 +18,21 @@ type alias Model =
   , feedModel : Feed
   }
 
-init : ( Route, Address ) -> ( Model, Cmd a )
+init : ( Route, Address ) -> Model
 init (route, address) =
-  { route = route
-  , address = address
-  , time = 0
-  , feedModel = Feed.init
-  } ! []
-
+  case route of
+    FeedRoute sec ->
+      let
+        feed = Feed.init
+      in
+        { route = route
+        , address = address
+        , time = 0
+        , feedModel = {feed|section = sec}
+        }
+    _ ->
+      { route = route
+      , address = address
+      , time = 0
+      , feedModel = Feed.init
+      }

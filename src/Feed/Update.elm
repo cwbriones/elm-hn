@@ -2,9 +2,10 @@ module Feed.Update
   exposing
     ( update
     , initialize
-    , Msg
+    , Msg(..)
     )
 
+import Debug exposing (log)
 import Task
 
 import Api
@@ -17,8 +18,8 @@ type Msg =
   | FetchIds (List Id)
   | Section Section
 
-initialize : Section -> (Feed, Cmd Msg)
-initialize section = fetchPage (Feed.init)
+initialize : Feed -> (Feed, Cmd Msg)
+initialize feed = fetchPage feed
 
 update : Msg -> Feed -> (Feed, Cmd Msg)
 update msg feed =
@@ -40,7 +41,7 @@ fetchPage model =
     pageSize = 30
 
     apiCall section =
-      case section of
+      case (log "Fetching" section) of
         New -> Api.new
         Ask -> Api.ask
         Jobs -> Api.job

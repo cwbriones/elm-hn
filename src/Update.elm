@@ -3,10 +3,10 @@ module Update
     ( update
     , urlUpdate
     , subscriptions
+    , initialize
     )
 
 import Time exposing (Time, second)
-import Debug exposing (log)
 
 import Hop
 import Hop.Types exposing (Address)
@@ -15,10 +15,14 @@ import Navigation
 import Routing exposing (hopConfig, Route(..))
 import Messages exposing (Msg(..))
 import Model exposing (Model)
--- import Feed.Model exposing (Feed, Section(..), Post, Id, Resource(..))
--- import Feed.Update
+import Feed.Update as FeedUpdate
 
--- Update
+initialize : Model -> (Model, Cmd Msg)
+initialize model =
+  let
+    (newFeedModel, feedCmd) = FeedUpdate.initialize model.feedModel
+  in
+    {model|feedModel = newFeedModel} ! [Cmd.map FeedMsg feedCmd]
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
@@ -27,10 +31,10 @@ update msg model =
     NavigateTo path ->
       let
         command =
-          Hop.outputFromPath hopConfig (log "Navigate to" path)
+          Hop.outputFromPath hopConfig path
           |> Navigation.newUrl
       in
-        (log "navigateFrom" model, command)
+        (model, command)
     SetQuery query ->
       let
         command =
@@ -40,61 +44,40 @@ update msg model =
           |> Navigation.newUrl
       in
         (model, command)
+    FeedMsg msg ->
+      let
+        (newFeedModel, feedCmd) = FeedUpdate.update msg model.feedModel
+      in
+        {model|feedModel = newFeedModel} ! [Cmd.map FeedMsg feedCmd]
 
-urlUpdate : (Route, Address) -> Model -> (Model, Cmd a)
+urlUpdate : (Route, Address) -> Model -> (Model, Cmd Msg)
 urlUpdate (route, address) model =
-  {model|route = (log "Url update" route), address = address} ! []
+  case route of
+    FeedRoute section ->
+      let
+        feedModel = model.feedModel
+        (newFeedModel, feedCmd) = FeedUpdate.initialize {feedModel|section = section, page = 0}
+      in
+        {model|route = route, address = address, feedModel = newFeedModel} ! [Cmd.map FeedMsg feedCmd]
+    _ ->
+      {model|route = route, address = address} ! []
 
 -- Subscriptions
 
 subscriptions : a -> Sub Msg
 subscriptions _ = Time.every second Tick
 
--- type Msg =
---   Tick Time
---   | GoTo DesiredPage
---   | FeedMsg Feed.Update.Msg
---   | Page DesiredPage
--- 
--- type alias Delegator msg model =
---   { tagger : msg -> Msg
---   , get : Model -> model
---   , set : model -> Model -> Model
---   , update : (msg -> model -> (model, Cmd msg))
---   }
--- 
--- initialize : Model -> (Model, Cmd Msg)
--- initialize model =
---     feedInitialize Top model
--- 
--- feedInitialize section model =
---   case Feed.Update.initialize section of
---     (feed, feedMsg) -> ({model|nav = feed}, Cmd.map FeedMsg feedMsg)
--- 
--- update : Msg -> Model -> (Model, Cmd Msg)
--- update msg model =
---   let
---     setNav nav model = {model|nav = nav}
---   in
---     case msg of
---       GoTo page -> {model|nav=page} ! []
---       Tick time -> {model | time = time} ! []
---       FeedMsg submsg -> delegate feedDelegator submsg model
---       Page desiredPage ->
---         case desiredPage of
---           Feed section -> feedInitialize section model
--- 
--- -- Fanout Message Types
--- 
--- delegate : Delegator msg model -> msg -> Model -> (Model, Cmd Msg)
--- delegate d msg model =
---   case d.update msg (d.get model) of
---     (new, newMsg) -> (d.set new model, Cmd.map d.tagger newMsg)
--- 
--- feedDelegator : Delegator Feed.Update.Msg Feed
--- feedDelegator =
---   { tagger = FeedMsg
---   , get = .nav
---   , set = \f model -> {model|nav = f}
---   , update = Feed.Update.update
---   }
+-- Fanout Message Types
+
+type alias Delegator msg model =
+  { tagger : msg -> Msg
+  , get : Model -> model
+  , set : model -> Model -> Model
+  , update : (msg -> model -> (model, Cmd msg))
+  }
+
+delegate : Delegator msg model -> msg -> Model -> (Model, Cmd Msg)
+delegate d msg model =
+  case d.update msg (d.get model) of
+    (new, newMsg) -> (d.set new model, Cmd.map d.tagger newMsg)
+
