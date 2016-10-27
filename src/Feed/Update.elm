@@ -8,8 +8,7 @@ module Feed.Update
 import Task
 
 import Api
-import Feed.Model as Feed exposing (Feed, Section(..))
-import Post exposing (Post, Id, Resource(..))
+import Feed.Model as Feed exposing (Feed, Section(..), Id, Post, Resource(..))
 
 type Msg =
   Paginate Int
