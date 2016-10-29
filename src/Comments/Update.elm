@@ -7,7 +7,6 @@ module Comments.Update
     )
 
 import Task exposing (Task)
-import Time exposing (Time)
 import Array exposing (Array)
 
 import Api
@@ -15,9 +14,8 @@ import Feed.Model
   exposing (Post, Id, Resource(..))
 import Comments.Model exposing (Model, CommentTree(..), rootTree, postToTree)
 
-type Msg =
-  Tick Time
-  | TaskFail
+type Msg
+  = TaskFail
   | UpdateRoot CommentTree
   | FetchRootSucceed Post
   | FetchSucceed (List Id) Post
@@ -27,14 +25,11 @@ perform = Task.perform (always TaskFail)
 
 initialize : Model -> (Model, Cmd Msg)
 initialize model =
-  let
-    getTime = perform Tick Time.now
-  in
-    case model.root of
-      NotLoaded id ->
-        model ! [fetchRoot id, getTime]
-      Loaded (CommentTree tree) ->
-        model ! [fetchComments [] tree.post, getTime]
+  case model.root of
+    NotLoaded id ->
+      model ! [fetchRoot id]
+    Loaded (CommentTree tree) ->
+      model ! [fetchComments [] tree.post]
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
@@ -42,7 +37,6 @@ update msg model =
     noCmd a = (a, Cmd.none)
   in
     case msg of
-      Tick time -> noCmd { model | time = time }
       TaskFail -> noCmd model
       UpdateRoot newRoot ->
         {model|root = Loaded newRoot} ! []

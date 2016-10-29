@@ -17,14 +17,10 @@ import Feed.Model
     , postDecoder
     )
 
-import Time exposing (Time)
-import Json.Decode as Decode exposing (Decoder, (:=))
-
 import Array exposing (Array)
 
 type alias Model =
   { root : Resource Id CommentTree
-  , time : Time
   , commentCount : Int
   }
 
@@ -44,13 +40,10 @@ rootTree model =
     Loaded (CommentTree root) -> Just (root.post, root.children)
     _ -> Nothing
 
-init : Model
-init =
+init : Id -> Model
+init id =
   let
-    initComments post =
-        Array.map NotLoaded (Array.fromList post.kids)
-
     defaultId = 12802121
   in
-    { root = NotLoaded defaultId, time = 0.0, commentCount = 0}
+    { root = NotLoaded id, commentCount = 0 }
 

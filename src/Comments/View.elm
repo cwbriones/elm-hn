@@ -2,8 +2,6 @@ module Comments.View
   exposing
     (view)
 
-import Markdown
-
 import Array exposing (Array)
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -11,44 +9,25 @@ import Html.Events exposing (onClick)
 import String
 import Time exposing (Time)
 
-import Model
+import Markdown
+
+import Comments.Update exposing (Msg(..), fetchRoot)
+import Feed.Model
   exposing
-    (Model, Post, Id, PostMeta, Resource(..), CommentTree(..), PostType(..), rootTree)
+    (Post, Id, PostMeta, Resource(..), PostType(..))
+import Comments.Model exposing (Model, CommentTree(..), rootTree)
 
-import Update exposing (Msg(..), fetchRoot)
-
-view : Model -> Html Msg
-view model =
+view : Time -> Model -> Html Msg
+view time model =
   let
     inner =
       case rootTree model of
         Just (post, comments) ->
-            (viewStory model.time post model.commentCount) ++
-            [ viewCommentTree model.time comments ]
+            (viewStory time post model.commentCount) ++
+            [ viewCommentTree time comments ]
         Nothing -> [placeholder]
   in
-    div [id "page-container"]
-      [ viewHeader
-      , div [ id "post-container" ] inner
-      ]
-
-viewHeader : Html Msg
-viewHeader =
-  let
-    sectionLink txt = a [ href ("#" ++ txt) ] [ text txt ]
-  in
-    header []
-      [ a [ href "#", id "site-title" ] [ text "Hacker News" ]
-      , span [ id "nav" ]
-        [ sectionLink "new"
-        , text " | "
-        , sectionLink "show"
-        , text " | "
-        , sectionLink "ask"
-        , text " | "
-        , sectionLink "jobs"
-        ]
-      ]
+    div [ id "post-container" ] inner
 
 viewStory : Time -> Post -> Int -> List (Html Msg)
 viewStory time post commentCount =
@@ -58,7 +37,7 @@ viewStory time post commentCount =
     _ ->
       []
 
-viewCommentTree : Time -> Array (Resource CommentTree) -> Html Msg
+viewCommentTree : Time -> Array (Resource Id CommentTree) -> Html Msg
 viewCommentTree time =
   let
     timeAgo post = showTime (Time.inSeconds time - post.time)

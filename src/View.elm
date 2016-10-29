@@ -5,16 +5,18 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
 import Html.App as App
 import String
+import Debug exposing (log)
 
 import Model exposing (Model)
 import Messages exposing (Msg(..))
 import Feed.Model exposing (Section(..))
 import Feed.View as FeedView
-import Routing exposing (Route(..))
+import Comments.View as CommentsView
+import Routing exposing (Route(..), linkTo, catchNavigationClicks)
 
 view : Model -> Html Msg
 view model =
-  div [class "container"]
+  div [class "container", Routing.catchNavigationClicks (NavigateTo << log "caught event")]
     [ viewHeader
     , viewPage model
     ]
@@ -22,18 +24,18 @@ view model =
 viewHeader : Html Msg
 viewHeader =
   let
-    sectionLink txt sec = a [ href ("#" ++ txt), onClick (NavigateTo txt) ] [ text txt ]
+    sectionLink txt sec = (linkTo (FeedRoute sec)) [ ] [ text txt ]
   in
     header []
-      [ a [ href "#", onClick (NavigateTo ""), id "site-title" ] [ text "Hacker News" ]
+      [ (linkTo (FeedRoute TopStories)) [ id "site-title" ] [ text "Hacker News" ]
       , span [ id "nav" ]
-        [ sectionLink "new" New
+        [ sectionLink "new" NewStories
         , text " | "
-        , sectionLink "show" Show
+        , sectionLink "show" ShowStories
         , text " | "
-        , sectionLink "ask" Ask
+        , sectionLink "ask" AskStories
         , text " | "
-        , sectionLink "jobs" Jobs
+        , sectionLink "jobs" JobStories
         ]
       ]
 
@@ -42,6 +44,8 @@ viewPage model =
   case model.route of
     FeedRoute _ ->
       App.map FeedMsg (FeedView.view model.time model.feedModel)
+    CommentsRoute _ ->
+      App.map CommentsMsg (CommentsView.view model.time model.commentsModel)
     _ ->
-  text (String.join "/" model.address.path)
+      div [] [ text "You come to a crossroads" ]
 

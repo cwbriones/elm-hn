@@ -8,8 +8,11 @@ import Html.Events exposing (onClick)
 import String
 import Time exposing (Time)
 
-import Feed.Model exposing (Feed, Section(..), Post, Id, Resource(..))
+import Markdown
+
+import Feed.Model exposing (Feed, Section(..), Post, Id, Resource(..), PostType(..), PostMeta)
 import Feed.Update exposing (Msg(..))
+import Routing
 
 view : Time -> Feed -> Html Msg
 view time model =
@@ -17,23 +20,31 @@ view time model =
     viewResource res =
       case res of
         NotLoaded _ -> placeholder
-        Loaded p -> viewPost time p
+        Loaded p ->
+          case p.meta of
+            Nothing -> placeholder
+            Just meta -> viewPost time meta p
+
     moreLink = a [ id "more", onClick <| Paginate (model.page + 1) ] [ text "More" ]
   in
+    -- TODO:
+    -- Expose a function that grabs the post meta from the post
+    -- as a maybe. Flatmap over this and then display the meta
     ol [class "post-list", start (model.offset + 1)]
       ((List.map viewResource model.posts) ++ [moreLink])
 
-placeholder : Html Msg
-placeholder =
-  li [class "post loading"] [ text "Loading ..." ]
-
-viewPost : Time -> Post -> Html Msg
-viewPost time post =
+viewPost : Time -> PostMeta -> Post -> Html Msg
+viewPost time meta post =
   let
-    by = ("X") ++ " points by " ++ post.by
+    by = (toString meta.score) ++ " points by " ++ post.by
     comments = (toString <| List.length post.kids) ++ " comments"
     timeAgo = showTime (Time.inSeconds time - post.time)
-    info = String.join " | " [ by, timeAgo, comments ]
+
+    viewInfo =
+      span []
+        [ text <| by ++ " | " ++ timeAgo ++ " | "
+        , (Routing.linkTo <| Routing.CommentsRoute post.id) [ ] [ text comments ]
+        ]
 
     showUrl =
       strip "http://"
@@ -50,16 +61,21 @@ viewPost time post =
           ]
        ]
 
-    -- TODO: This should link to the item
-    -- viewContent post =
-    --   case post.content of
-    --     Just (Url url) -> viewUrl url post.title
-    --     _ -> [ a [ ] [ text post.title ] ]
+    viewTitle =
+      if meta.url == ""
+        then [ a [ ] [ text meta.title ] ]
+        else viewUrl meta.url meta.title
   in
     li [class "post"]
-      [ div [class "post-title"] [text "This is the post title"]
-      , div [ class "post-meta" ] [ text info ]
+      [ div [class "post-title"] viewTitle
+      , div [ class "post-meta" ] [viewInfo]
       ]
+
+-- Shared
+
+placeholder : Html Msg
+placeholder =
+  li [class "post loading"] [ text "Loading ..." ]
 
 showTime : Float -> String
 showTime secF =
@@ -86,6 +102,7 @@ showTime secF =
           (days, _, _, _) -> showUnit days "day"
       else
         "some time ago"
+
 
 -- String Utilities
 

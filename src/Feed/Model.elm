@@ -24,33 +24,33 @@ type alias Feed =
   }
 
 type Section =
-  Top
-  | New
-  | Show
-  | Ask
-  | Jobs
+  TopStories
+  | NewStories
+  | ShowStories
+  | AskStories
+  | JobStories
 
 stringToSection : String -> Maybe Section
 stringToSection string =
   case string of
-    "top" -> Just Top
-    "new" -> Just New
-    "show" -> Just Show
-    "ask" -> Just Ask
-    "jobs" -> Just Jobs
+    "top" -> Just TopStories
+    "new" -> Just NewStories
+    "show" -> Just ShowStories
+    "ask" -> Just AskStories
+    "jobs" -> Just JobStories
     _ -> Nothing
 
 sectionToString : Section -> String
 sectionToString section =
   case section of
-    Top -> "top"
-    New -> "new"
-    Show -> "show"
-    Ask -> "ask"
-    Jobs -> "jobs"
+    TopStories -> "top"
+    NewStories -> "new"
+    ShowStories -> "show"
+    AskStories -> "ask"
+    JobStories -> "jobs"
 
 init : Feed
-init = { page = 0, posts = [], offset = 0, section = Top }
+init = { page = 0, posts = [], offset = 0, section = TopStories }
 
 -- Posts
 
@@ -70,9 +70,9 @@ type alias Post =
 type PostType
   = Comment
   | Story
-  -- | Ask
-  -- | Job
-  -- | Poll
+  | Job
+  | Ask
+  | Poll
 
 type alias PostMeta =
   { title : String
@@ -116,12 +116,12 @@ postTypeInfo tag =
         succeed Comment
       "story" ->
         succeed Story
-      -- "job" ->
-      --   succeed Job
-      -- "poll" ->
-      --   succeed Poll
-      -- "ask" ->
-      --   succeed Ask
+      "job" ->
+        succeed Job
+      "poll" ->
+        succeed Poll
+      "ask" ->
+        succeed Ask
       _ ->
         Decode.fail (tag ++ " is not a recognized post type")
 

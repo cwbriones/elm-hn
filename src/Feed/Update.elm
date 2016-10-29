@@ -42,11 +42,11 @@ fetchPage model =
 
     apiCall section =
       case (log "Fetching" section) of
-        New -> Api.new
-        Ask -> Api.ask
-        Jobs -> Api.job
-        Show -> Api.show
-        Top -> Api.top
+        NewStories -> Api.new
+        AskStories -> Api.ask
+        JobStories -> Api.job
+        ShowStories -> Api.show
+        TopStories -> Api.top
 
     sectionPosts = (apiCall model.section) model.page pageSize
     emptyPage = List.map NotLoaded (List.repeat pageSize 0)
