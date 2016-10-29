@@ -49,6 +49,18 @@ a {
   position: relative;
 }
 
+ul {
+  list-style-type: none
+}
+
+.post-body {
+  color: #828282;
+}
+
+.comment-text {
+  font-size: 9pt;
+}
+
 #more {
   font-size: 10pt;
   color: #828282;
