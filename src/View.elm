@@ -12,11 +12,11 @@ import Messages exposing (Msg(..))
 import Feed.Model exposing (Section(..))
 import Feed.View as FeedView
 import Comments.View as CommentsView
-import Routing exposing (Route(..), linkTo, catchNavigationClicks)
+import Routing exposing (Route(..), linkTo)
 
 view : Model -> Html Msg
 view model =
-  div [class "container", Routing.catchNavigationClicks (NavigateTo << log "caught event")]
+  div [ class "container" ]
     [ viewHeader
     , div [class "content"] [viewPage model]
     ]
@@ -24,10 +24,10 @@ view model =
 viewHeader : Html Msg
 viewHeader =
   let
-    sectionLink txt sec = (linkTo (FeedRoute sec)) [ ] [ text txt ]
+    sectionLink txt sec = (linkTo (FeedRoute sec) NavigateTo) [ ] [ text txt ]
   in
     header []
-      [ (linkTo (FeedRoute TopStories)) [ id "site-title" ] [ text "Hacker News" ]
+      [ (linkTo (FeedRoute TopStories) NavigateTo) [ id "site-title" ] [ text "Hacker News" ]
       , span [ id "nav" ]
         [ sectionLink "new" NewStories
         , text " | "

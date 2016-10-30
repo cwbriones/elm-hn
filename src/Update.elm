@@ -47,7 +47,7 @@ update msg model =
 
 urlUpdate : Route -> Model -> (Model, Cmd Msg)
 urlUpdate route model =
-  case route of
+  case (log "URL Update" route) of
     FeedRoute section ->
       let
         feedModel = model.feedModel
@@ -59,7 +59,7 @@ urlUpdate route model =
         commentsModel = model.commentsModel
         (newCommentsModel, commentsCmd) = CommentsUpdate.initialize <| Comments.init id
       in
-        {model|commentsModel = newCommentsModel} ! [Cmd.map CommentsMsg commentsCmd]
+        {model|route = route, commentsModel = newCommentsModel} ! [Cmd.map CommentsMsg commentsCmd]
     _ ->
       model ! []
 

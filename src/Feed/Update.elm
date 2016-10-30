@@ -10,6 +10,7 @@ import Task
 
 import Api
 import Feed.Model as Feed exposing (Feed, Section(..), Id, Post, Resource(..))
+import Navigation
 
 type Msg =
   Paginate Int
@@ -17,6 +18,7 @@ type Msg =
   | FetchPost Post
   | FetchIds (List Id)
   | Section Section
+  | NavigateTo String
 
 initialize : Feed -> (Feed, Cmd Msg)
 initialize feed = fetchPage feed
@@ -34,6 +36,7 @@ update msg feed =
       FetchPost post -> noCmd { feed | posts = insertPost post feed.posts }
       FetchIds ids -> ({ feed | posts = List.map NotLoaded ids }, fetchPosts ids)
       Section section -> fetchPage {feed | page = 0, section = section}
+      NavigateTo path -> (feed, Navigation.newUrl path)
 
 fetchPage : Feed -> (Feed, Cmd Msg)
 fetchPage model =

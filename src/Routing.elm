@@ -3,7 +3,6 @@ module Routing
     ( Route(..)
     , urlParser
     , reverse
-    , catchNavigationClicks
     , linkTo
     )
 
@@ -11,6 +10,7 @@ import Json.Decode as Json
 import Html.Events exposing (onWithOptions)
 import Html exposing (..)
 import Html.Attributes exposing (..)
+import String
 import Debug exposing (log)
 
 import UrlParser exposing ((</>))
@@ -27,11 +27,15 @@ urlParser : Navigation.Parser Route
 urlParser =
   let
     parse path =
-      path
+      (log "parsing" path)
       |> UrlParser.parse identity routes
       |> Result.withDefault NotFoundRoute
+    stripLeading path =
+      case String.startsWith "/" path of
+        True -> String.dropLeft 1 path
+        False -> path
   in
-    Navigation.makeParser (.pathname >> parse)
+    Navigation.makeParser (.pathname >> stripLeading >> parse)
 
 routes : UrlParser.Parser (Route -> a) a
 routes =
@@ -45,8 +49,8 @@ sectionParser =
   let
     checkTag string =
       case string of
-        "top" -> Ok TopStories
         "" -> Ok TopStories
+        "top" -> Ok TopStories
         "jobs" -> Ok JobStories
         "new" -> Ok NewStories
         "ask" -> Ok AskStories
@@ -65,44 +69,22 @@ reverse route =
 
 -- Navigation Helpers for Views
 
-catchNavigationClicks : (String -> msg) -> Html.Attribute msg
-catchNavigationClicks tagger =
-  let
-    decoder = Json.map (log "decoding nav") pathDecoder
-  in
-    onWithOptions "click"
-      { stopPropagation = True
-      , preventDefault = True
-      }
-      (Json.map tagger (Json.at [ "target" ] decoder))
-
-pathDecoder =
-  Json.oneOf
-    [ Json.at [ "data-navigate" ] Json.string
-    , Json.at [ "parentElement" ] (lazy (\_ -> pathDecoder))
-    , Json.fail "no path found for click"
-    ]
-
 navigate : Route -> Cmd msg
 navigate route =
   Navigation.newUrl (reverse route)
 
-linkTo : Route -> List (Attribute msg) -> List (Html msg) -> Html msg
-linkTo route attrs content =
-  a ((linkAttrs route) ++ attrs) content
-
-linkAttrs : Route -> List (Attribute msg)
-linkAttrs route =
+linkTo : Route -> (String -> msg) -> List (Attribute msg) -> List (Html msg) -> Html msg
+linkTo route tagger attrs content =
   let
-    path =
-      reverse route
+    path = reverse route
+    linkAttrs =
+      [ href path
+      , attribute "data-navigate" path
+      , onWithOptions "click"
+        { stopPropagation = False
+        , preventDefault = True
+        } (Json.succeed (tagger path))
+      ]
   in
-    [ href path
-    , attribute "data-navigate" path
-    ]
+    a (linkAttrs ++ attrs) content
 
-lazy : (() -> Json.Decoder a) -> Json.Decoder a
-lazy getDecoder =
-  Json.customDecoder Json.value <|
-    \rawValue ->
-       Json.decodeValue (getDecoder ()) rawValue

@@ -10,7 +10,7 @@ import Time exposing (Time)
 
 import Feed.Model exposing (Feed, Section(..), Post, Id, Resource(..), PostType(..), PostMeta)
 import Feed.Update exposing (Msg(..))
-import Routing
+import Routing exposing (linkTo)
 
 view : Time -> Feed -> Html Msg
 view time model =
@@ -38,7 +38,7 @@ viewPost time meta post =
     comments = (toString <| List.length post.kids) ++ " comments"
     timeAgo = showTime (Time.inSeconds time - post.time)
 
-    commentsLink = Routing.linkTo <| Routing.CommentsRoute post.id
+    commentsLink = linkTo (Routing.CommentsRoute post.id) NavigateTo
 
     viewInfo =
       span []
