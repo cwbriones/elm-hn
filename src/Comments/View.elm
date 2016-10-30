@@ -10,8 +10,6 @@ import String
 import Time exposing (Time)
 import Json.Encode exposing (string)
 
-import Markdown
-
 import Comments.Update exposing (Msg(..), fetchRoot)
 import Feed.Model
   exposing

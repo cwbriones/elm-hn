@@ -1,7 +1,6 @@
 module Routing
   exposing
     ( Route(..)
-    , hopConfig
     , urlParser
     , reverse
     , catchNavigationClicks
@@ -15,8 +14,6 @@ import Html.Attributes exposing (..)
 import Debug exposing (log)
 
 import UrlParser exposing ((</>))
-import Hop
-import Hop.Types exposing (Config, Address, Query)
 import Navigation
 
 import Feed.Model exposing (Section(..), sectionToString)
@@ -26,24 +23,15 @@ type Route
   | CommentsRoute Int
   | NotFoundRoute
 
-hopConfig : Config
-hopConfig =
-  { hash = False
-  , basePath = "/"
-  }
-
-urlParser : Navigation.Parser (Route, Address)
+urlParser : Navigation.Parser Route
 urlParser =
   let
     parse path =
       path
       |> UrlParser.parse identity routes
       |> Result.withDefault NotFoundRoute
-
-    resolver =
-      Hop.makeResolver hopConfig parse
   in
-    Navigation.makeParser (.href >> resolver)
+    Navigation.makeParser (.pathname >> parse)
 
 routes : UrlParser.Parser (Route -> a) a
 routes =

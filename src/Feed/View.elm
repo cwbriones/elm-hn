@@ -8,8 +8,6 @@ import Html.Events exposing (onClick)
 import String
 import Time exposing (Time)
 
-import Markdown
-
 import Feed.Model exposing (Feed, Section(..), Post, Id, Resource(..), PostType(..), PostMeta)
 import Feed.Update exposing (Msg(..))
 import Routing
