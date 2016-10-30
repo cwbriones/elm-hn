@@ -8,6 +8,11 @@
   padding-bottom: 5px;
 }
 
+.content {
+  max-width: 90%;
+  margin: 0 auto;
+}
+
 header {
   padding: 5px;
   background-color: #ff6600;
@@ -28,19 +33,9 @@ header {
   height: 50px;
 }
 
-a {
-  color: #000000;
-  text-decoration: none;
-  cursor: pointer;
-}
-
 .post {
   font-size: 10pt;
   padding: 5px;
-}
-
-.post a:visited {
-  color: #828282;
 }
 
 .post-meta {
@@ -50,15 +45,25 @@ a {
 }
 
 ul {
-  list-style-type: none
+  list-style-type: none;
+  padding-left: 0;
+  padding-bottom: 5px;
+}
+
+.comments ul {
+  list-style-type: none;
+  padding-left: 2em;
+}
+
+.comment-body {
+  font-size: 9pt;
+  display: inline-block;
 }
 
 .post-body {
+  font-size: 10pt;
   color: #828282;
-}
-
-.comment-text {
-  font-size: 9pt;
+  display: inline-block;
 }
 
 #more {
@@ -70,6 +75,16 @@ ul {
   font-size: 8pt;
   color: #828282;
   padding: 5px;
+}
+
+a {
+  color: #000000;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.post a:visited {
+  color: #828282;
 }
 
 .url a {

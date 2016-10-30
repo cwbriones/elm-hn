@@ -8,6 +8,7 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
 import String
 import Time exposing (Time)
+import Json.Encode exposing (string)
 
 import Markdown
 
@@ -27,7 +28,7 @@ view time model =
             [ viewCommentTree time comments ]
         Nothing -> [placeholder]
   in
-    div [ id "post-container" ] inner
+    div [ ] inner
 
 viewStory : Time -> Post -> Int -> List (Html Msg)
 viewStory time post commentCount =
@@ -53,15 +54,14 @@ viewCommentTree time =
           [ text <| tree.post.by ++ " "
           , a [ onClick <| UpdateRoot ct ] [ text (timeAgo tree.post) ]
           ]
-        , div [ class "comment-text" ] [
-          Markdown.toHtml [] tree.post.text
-        ]
-        , viewCommentTree time tree.children
+        , br [] []
+        , postBody [ class "comment-body" ] tree.post.text
+        , div [ class "comments" ] [ viewCommentTree time tree.children ]
         ]
   in
     (Array.map viewResource)
     >> Array.toList
-    >> (ul [class "comment-list"])
+    >> (ul [])
 
 placeholder : Html Msg
 placeholder =
@@ -98,12 +98,15 @@ viewStory' time meta post commentCount =
     viewText post =
       if post.text == ""
         then []
-        else [ div [class "post-body"] [ Markdown.toHtml [] post.text ] ]
+        else [ postBody [ class "post-body" ] post.text ]
   in
     div [class "post"]
       ([ div [class "post-title"] (viewMeta meta)
       , div [ class "post-meta" ] [ text info ]
       ] ++ (viewText post))
+
+postBody attrs body =
+  span (attrs ++ [ property "innerHTML" <| string body ]) []
 
 showTime : Float -> String
 showTime secF =

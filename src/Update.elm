@@ -6,6 +6,7 @@ module Update
     , initialize
     )
 
+import Task
 import Time exposing (Time, second)
 import Debug exposing (log)
 
@@ -14,7 +15,7 @@ import Hop.Types exposing (Address)
 import Navigation
 
 import Routing exposing (hopConfig, Route(..))
-import Messages exposing (Msg(..))
+import Messages exposing (Msg(..), noop)
 import Model exposing (Model)
 import Feed.Update as FeedUpdate
 import Comments.Model as Comments
@@ -22,7 +23,11 @@ import Comments.Update as CommentsUpdate
 
 initialize : Model -> (Model, Cmd Msg)
 initialize model =
-  urlUpdate (model.route, model.address) model
+  let
+    (initialized, cmd) = urlUpdate (model.route, model.address) model
+    fetchTime = Task.perform noop Tick Time.now
+  in
+    (initialized, Cmd.batch [cmd, fetchTime])
   -- case model.route of
   --   FeedRoute _ ->
   --     let
@@ -41,6 +46,7 @@ initialize model =
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
+    Noop -> model ! []
     Tick time -> {model|time = time} ! []
     NavigateTo path ->
       let

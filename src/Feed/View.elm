@@ -40,10 +40,12 @@ viewPost time meta post =
     comments = (toString <| List.length post.kids) ++ " comments"
     timeAgo = showTime (Time.inSeconds time - post.time)
 
+    commentsLink = Routing.linkTo <| Routing.CommentsRoute post.id
+
     viewInfo =
       span []
         [ text <| by ++ " | " ++ timeAgo ++ " | "
-        , (Routing.linkTo <| Routing.CommentsRoute post.id) [ ] [ text comments ]
+        , commentsLink [ ] [ text comments ]
         ]
 
     showUrl =
@@ -63,7 +65,7 @@ viewPost time meta post =
 
     viewTitle =
       if meta.url == ""
-        then [ a [ ] [ text meta.title ] ]
+        then [ commentsLink [ ] [ text meta.title ] ]
         else viewUrl meta.url meta.title
   in
     li [class "post"]

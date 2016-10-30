@@ -12,3 +12,7 @@ type Msg
   | Tick Time
   | FeedMsg F.Msg
   | CommentsMsg C.Msg
+  | Noop
+
+noop : a -> Msg
+noop = always Noop

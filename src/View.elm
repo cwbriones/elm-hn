@@ -18,7 +18,7 @@ view : Model -> Html Msg
 view model =
   div [class "container", Routing.catchNavigationClicks (NavigateTo << log "caught event")]
     [ viewHeader
-    , viewPage model
+    , div [class "content"] [viewPage model]
     ]
 
 viewHeader : Html Msg
