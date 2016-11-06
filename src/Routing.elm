@@ -8,12 +8,12 @@ module Routing
 
 import Json.Decode as Json
 import Html.Events exposing (onWithOptions)
-import Html exposing (..)
-import Html.Attributes exposing (..)
+import Html exposing (Html, Attribute, a)
+import Html.Attributes exposing (href, attribute)
 import String
 import Debug exposing (log)
 
-import UrlParser exposing ((</>))
+import UrlParser exposing ((</>), s)
 import Navigation
 
 import Feed.Model exposing (Section(..), sectionToString)
@@ -23,13 +23,17 @@ type Route
   | CommentsRoute Int
   | NotFoundRoute
 
+basePath : String
+basePath = "elm-hn"
+
 urlParser : Navigation.Parser Route
 urlParser =
   let
     parse path =
-      (log "parsing" path)
+      path
       |> UrlParser.parse identity routes
       |> Result.withDefault NotFoundRoute
+
     stripLeading path =
       case String.startsWith "/" path of
         True -> String.dropLeft 1 path
@@ -40,8 +44,8 @@ urlParser =
 routes : UrlParser.Parser (Route -> a) a
 routes =
   UrlParser.oneOf
-    [ UrlParser.format FeedRoute sectionParser
-    , UrlParser.format (CommentsRoute) (UrlParser.s "item" </> UrlParser.int)
+    [ UrlParser.format FeedRoute (s basePath </> sectionParser)
+    , UrlParser.format (CommentsRoute) (s basePath </> s "item" </> UrlParser.int)
     ]
 
 sectionParser : UrlParser.Parser (Section -> a) a
@@ -61,11 +65,15 @@ sectionParser =
 
 reverse : Route -> String
 reverse route =
-  case route of
-    FeedRoute TopStories -> "/"
-    FeedRoute section -> "/" ++ sectionToString section
-    CommentsRoute id -> "/item/" ++ (toString id)
-    NotFoundRoute -> "/"
+  let
+    relative =
+      case route of
+        FeedRoute TopStories -> ""
+        FeedRoute section -> sectionToString section
+        CommentsRoute id -> "item/" ++ (toString id)
+        NotFoundRoute -> ""
+  in
+    "/" ++ basePath ++ "/" ++ relative
 
 -- Navigation Helpers for Views
 
